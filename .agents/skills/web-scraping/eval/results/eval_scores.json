@@ -1,0 +1,389 @@
+{
+  "metadata": {
+    "generated_at": "2026-09-01T06:40:11.508421+00:00",
+    "skill_dir": "C:\\Users\\david\\Desktop\\scrape\\.agents\\skills\\web-scraping",
+    "files_scanned": 47,
+    "total_weaknesses": 16,
+    "eval_version": "1.0.0"
+  },
+  "overall": {
+    "score": 48,
+    "max_score": 48,
+    "percentage": 100.0,
+    "grade": "A"
+  },
+  "categories": [
+    {
+      "name": "Data Quality & Validation",
+      "score": 9,
+      "max_score": 9,
+      "percentage": 100.0,
+      "weakness_count": 3
+    },
+    {
+      "name": "Edge Case Coverage",
+      "score": 9,
+      "max_score": 9,
+      "percentage": 100.0,
+      "weakness_count": 3
+    },
+    {
+      "name": "Error Handling & Resilience",
+      "score": 9,
+      "max_score": 9,
+      "percentage": 100.0,
+      "weakness_count": 3
+    },
+    {
+      "name": "Operational Robustness",
+      "score": 3,
+      "max_score": 3,
+      "percentage": 100.0,
+      "weakness_count": 1
+    },
+    {
+      "name": "Security & Ethics",
+      "score": 6,
+      "max_score": 6,
+      "percentage": 100.0,
+      "weakness_count": 2
+    },
+    {
+      "name": "Structural Quality",
+      "score": 12,
+      "max_score": 12,
+      "percentage": 100.0,
+      "weakness_count": 4
+    }
+  ],
+  "weaknesses": [
+    {
+      "id": "W1",
+      "category": "Error Handling & Resilience",
+      "title": "No timeout/retry guidance for proxy-mcp tools",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Provides explicit timeout/retry patterns for proxy-mcp tools with example code",
+      "evidence_count": 11,
+      "evidence": [
+        "✓ [workflows\\reconnaissance.md:675] Pattern `timeout` → \"1. **Timeouts**: If a tool call hangs or returns no response within 10 seconds, cancel and retry. Do\"",
+        "✓ [workflows\\reconnaissance.md:407] Pattern `retry` → \"- [ ] Add retry logic (3 attempts)\"",
+        "✓ [workflows\\reconnaissance.md:677] Pattern `proxy.*fail` → \"2. **Retries with max attempts**: If `proxy_start()` or `interceptor_chrome_launch()` fails, retry u\"",
+        "✓ [workflows\\reconnaissance.md:688] Pattern `tool.*fail` → \"→ If error: ABORT — log \"Tool failed after 3 attempts\" and fall back to curl-only mode\"",
+        "✓ [workflows\\reconnaissance.md:697] Pattern `MCP.*unavailable` → \"4. Report findings with a note: \"proxy-mcp unavailable, results are curl-only mode\"\""
+      ],
+      "recommendation": "Add a 'Tool Error Handling' subsection to workflows/reconnaissance.md that covers: (1) What to do when proxy_start() fails, (2) timeout patterns for tool calls, (3) retry logic for flaky MCP connections, (4) graceful degradation to curl-only reconnaissance when MCP is unavailable.",
+      "fix_locations": [
+        "workflows/reconnaissance.md",
+        "reference/proxy-tool-reference.md"
+      ]
+    },
+    {
+      "id": "W2",
+      "category": "Error Handling & Resilience",
+      "title": "No graceful degradation when proxy-mcp is unavailable",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Provides a complete curl-only fallback workflow when proxy-mcp is unavailable",
+      "evidence_count": 8,
+      "evidence": [
+        "✓ [SKILL.md:82] Pattern `without.*proxy.*mcp` → \"### Degraded Mode: Without proxy-mcp\"",
+        "✓ [workflows\\reconnaissance.md:694] Pattern `without.*proxy.*mcp` → \"1. If you must run without proxy-mcp → skip Phases 1-2 entirely.\"",
+        "✓ [workflows\\reconnaissance.md:691] Pattern `proxy.*mcp.*not.*available` → \"3. **Graceful degradation to curl-only mode**: If `proxy-mcp` is not available, or the MCP not insta\"",
+        "✓ [workflows\\reconnaissance.md:695] Pattern `fallback.*without.*browser` → \"2. Run Phase 0 only (curl-based reconnaissance). This is the fallback without browser.\"",
+        "✓ [workflows\\reconnaissance.md:688] Pattern `curl.*only.*mode` → \"→ If error: ABORT — log \"Tool failed after 3 attempts\" and fall back to curl-only mode\""
+      ],
+      "recommendation": "Add a 'Degraded Mode: Without proxy-mcp' section to SKILL.md that maps each phase to its non-MCP alternative: Phase 0 = curl (already works), Phase 1 = browser_subagent or manual DevTools, Phase 2 = skip, Phase 3 = manual validation, Phase 4 = curl + header inspection.",
+      "fix_locations": [
+        "SKILL.md",
+        "workflows/reconnaissance.md"
+      ]
+    },
+    {
+      "id": "W3",
+      "category": "Error Handling & Resilience",
+      "title": "Bare except/pass pattern in multi-tiered-scraping code example",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Catches specific exceptions, logs, and has retry/fallback logic",
+      "evidence_count": 5,
+      "evidence": [
+        "✓ [..\\multi-tiered-scraping\\SKILL.md:75] Pattern `log.*error` → \"logger.error(f'Playwright fallback encountered a critical error for {url}')\"",
+        "✓ [..\\multi-tiered-scraping\\SKILL.md:76] Pattern `log.*warning` → \"logger.warning(f'Exception details: {e}')\"",
+        "✓ [..\\multi-tiered-scraping\\SKILL.md:58] Pattern `logger\\.` → \"logger.debug(f'Fast fetch failed for {url}: {e}')\"",
+        "✓ [..\\multi-tiered-scraping\\SKILL.md:77] Pattern `raise` → \"raise e\"",
+        "✓ [..\\multi-tiered-scraping\\SKILL.md:57] Pattern `except.*as\\s+\\w+` → \"except (httpx.TimeoutException, httpx.NetworkError) as e:\""
+      ],
+      "recommendation": "Replace `except Exception: pass` with `except (httpx.TimeoutException, httpx.NetworkError) as e: logger.debug(f'Fast fetch failed for {url}: {e}')`. This preserves the fallback-to-Playwright behavior while making failures visible.",
+      "fix_locations": [
+        "../multi-tiered-scraping/SKILL.md"
+      ]
+    },
+    {
+      "id": "W4",
+      "category": "Edge Case Coverage",
+      "title": "No handling for authentication-gated content",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Full auth workflow: login recording, token extraction, session reuse, refresh handling",
+      "evidence_count": 16,
+      "evidence": [
+        "✓ [workflows\\reconnaissance.md:569] Pattern `cookie.*auth` → \"│   │                 ├─ Simple (cookie/token in traffic) → Record auth flow, extract tokens (See `.\"",
+        "✓ [workflows\\reconnaissance.md:570] Pattern `OAuth` → \"│   │                 ├─ OAuth redirect → Follow OAuth chain, extract bearer token, note refresh int\"",
+        "✓ [workflows\\reconnaissance.md:570] Pattern `bearer.*token` → \"│   │                 ├─ OAuth redirect → Follow OAuth chain, extract bearer token, note refresh int\"",
+        "✓ [workflows\\reconnaissance.md:569] Pattern `record.*auth.*flow` → \"│   │                 ├─ Simple (cookie/token in traffic) → Record auth flow, extract tokens (See `.\"",
+        "✓ [strategies\\traffic-interception.md:68] Pattern `auth.*header` → \"- Authentication headers or cookies\""
+      ],
+      "recommendation": "Add strategies/authentication.md covering: (1) Recording login flows via proxy traffic capture, (2) Extracting session cookies/tokens from browser, (3) Replaying auth in HTTP clients, (4) Token refresh/rotation patterns, (5) When to give up (2FA, CAPTCHA-gated login).",
+      "fix_locations": [
+        "strategies/",
+        "workflows/reconnaissance.md"
+      ]
+    },
+    {
+      "id": "W5",
+      "category": "Edge Case Coverage",
+      "title": "No handling for non-English / internationalized sites",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Comprehensive i18n section with encoding, locale headers, non-Latin selector patterns",
+      "evidence_count": 16,
+      "evidence": [
+        "✓ [strategies\\anti-blocking.md:130] Pattern `Accept-Language` → \"\"Accept-Language\": \"en-US,en;q=0.9\",\"",
+        "✓ [reference\\report-schema.md:128] Pattern `locale` → \"account for locale headers.\"",
+        "✓ [reference\\report-schema.md:131] Pattern `Accept-Language` → \"- Test price extraction with `Accept-Language` and geo headers\"",
+        "✓ [strategies\\i18n.md:5] Pattern `UTF-?8` → \"## 1. Character Encodings (UTF-8)\"",
+        "✓ [strategies\\i18n.md:3] Pattern `encod` → \"When dealing with non-English or multi-lingual websites, you must handle character encodings and loc\""
+      ],
+      "recommendation": "Add a section to strategies/cheerio-scraping.md or a new strategies/i18n.md covering: (1) charset detection (meta tag, HTTP header, BOM), (2) ensuring UTF-8 output in JSON/CSV, (3) Accept-Language header for locale-dependent content, (4) URL-encoded vs Unicode paths, (5) CJK/RTL text extraction pitfalls.",
+      "fix_locations": [
+        "strategies/cheerio-scraping.md"
+      ]
+    },
+    {
+      "id": "W6",
+      "category": "Edge Case Coverage",
+      "title": "No guidance for JavaScript SPA routing (hash/history API)",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Explains hash vs history routing, how to detect it, and extraction strategies",
+      "evidence_count": 14,
+      "evidence": [
+        "✓ [strategies\\cheerio-vs-browser-test.md:132] Pattern `hash.*rout` → \"- **Hash Routing**: Look for `#/` or hash-bang fragment navigation. These do not trigger network tra\"",
+        "✓ [strategies\\cheerio-vs-browser-test.md:133] Pattern `pushState` → \"- **History API**: Look for `pushState` or seamless URL changes.\"",
+        "✓ [strategies\\cheerio-vs-browser-test.md:133] Pattern `history.*API` → \"- **History API**: Look for `pushState` or seamless URL changes.\"",
+        "✓ [strategies\\cheerio-vs-browser-test.md:129] Pattern `SPA.*rout` → \"## Single Page Applications (SPA) Routing\"",
+        "✓ [strategies\\cheerio-vs-browser-test.md:131] Pattern `client.?side.*rout` → \"When evaluating a single-page app (SPA) for client-side routing, understand that navigation won't tr\""
+      ],
+      "recommendation": "Add a 'SPA Routing Patterns' subsection to strategies/dom-scraping.md covering: (1) How to detect hash routing vs history API, (2) Why proxy traffic capture misses client-side navigation, (3) Using interceptor_chrome_devtools_navigate() with hash URLs, (4) Waiting for route-specific DOM updates after navigation.",
+      "fix_locations": [
+        "strategies/dom-scraping.md",
+        "strategies/cheerio-vs-browser-test.md"
+      ]
+    },
+    {
+      "id": "W7",
+      "category": "Data Quality & Validation",
+      "title": "No data schema validation patterns",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Provides runtime schema validation patterns (Zod/Ajv) with code examples",
+      "evidence_count": 12,
+      "evidence": [
+        "✓ [workflows\\implementation.md:191] Pattern `[Zz]od` → \"Schema validation (e.g., using JSON Schema, Ajv, or Zod) is critical to ensure data quality and perf\"",
+        "✓ [workflows\\implementation.md:191] Pattern `JSON\\s*Schema` → \"Schema validation (e.g., using JSON Schema, Ajv, or Zod) is critical to ensure data quality and perf\"",
+        "✓ [workflows\\implementation.md:191] Pattern `Ajv` → \"Schema validation (e.g., using JSON Schema, Ajv, or Zod) is critical to ensure data quality and perf\"",
+        "✓ [workflows\\implementation.md:191] Pattern `type.*check` → \"Schema validation (e.g., using JSON Schema, Ajv, or Zod) is critical to ensure data quality and perf\"",
+        "✓ [workflows\\implementation.md:191] Pattern `schema.*valid` → \"Schema validation (e.g., using JSON Schema, Ajv, or Zod) is critical to ensure data quality and perf\""
+      ],
+      "recommendation": "Add a 'Data Validation' section to workflows/implementation.md with: (1) A Zod schema example for scraped product data, (2) A validation step in the scrape loop that logs invalid records, (3) Percentage-based quality threshold (e.g., 'abort if >10% of records fail validation').",
+      "fix_locations": [
+        "workflows/implementation.md"
+      ]
+    },
+    {
+      "id": "W8",
+      "category": "Data Quality & Validation",
+      "title": "No deduplication strategy",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Provides URL dedup + content hash dedup + unique field checking patterns",
+      "evidence_count": 17,
+      "evidence": [
+        "✓ [workflows\\implementation.md:214] Pattern `dedup` → \"## Step 7: Deduplication Strategy\"",
+        "✓ [workflows\\implementation.md:216] Pattern `duplicate` → \"Scraping via sitemaps and APIs can result in duplicate URLs/data. Ensure you have a deduplication st\"",
+        "✓ [workflows\\implementation.md:219] Pattern `unique` → \"2. **Content Hash / Unique ID Check**: If extracting multiple items per page, maintain a `Set` of un\"",
+        "✓ [workflows\\implementation.md:218] Pattern `visited` → \"1. **URL Normalization & Visited Sets**: Strip tracking parameters before adding to the queue. Keep \"",
+        "✓ [workflows\\implementation.md:218] Pattern `seen` → \"1. **URL Normalization & Visited Sets**: Strip tracking parameters before adding to the queue. Keep \""
+      ],
+      "recommendation": "Add a 'Deduplication' subsection to workflows/implementation.md covering: (1) URL normalization + visited set, (2) Content hash dedup for similar pages, (3) Crawlee's built-in RequestQueue dedup, (4) Post-scrape dedup by business key.",
+      "fix_locations": [
+        "workflows/implementation.md",
+        "strategies/hybrid-approaches.md"
+      ]
+    },
+    {
+      "id": "W9",
+      "category": "Data Quality & Validation",
+      "title": "No output format guidance beyond JSON",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Comprehensive output section: JSON, CSV, JSONL, DB, streaming, memory management",
+      "evidence_count": 13,
+      "evidence": [
+        "✓ [SKILL.md:74] Pattern `stream` → \"**Summary**: Skip if no protection signals were detected. Otherwise, test raw HTTP, then stealth bro\"",
+        "✓ [workflows\\implementation.md:227] Pattern `CSV` → \"- **CSV**: Good for non-nested data and analyst delivery. Use `await Dataset.exportToCSV('results')`\"",
+        "✓ [workflows\\implementation.md:226] Pattern `JSONL` → \"- **JSONL (Streaming)**: Best for large datasets. Appends line-by-line, avoiding memory crashes.\"",
+        "✓ [workflows\\implementation.md:117] Pattern `stream` → \"# Add upstream proxy for IP rotation if needed (Never hardcode credentials!)\"",
+        "✓ [workflows\\implementation.md:228] Pattern `database` → \"- **Database (Postgres/SQLite)**: For continuous syncing. Batch your writes (e.g., save every 1,000 \""
+      ],
+      "recommendation": "Add an 'Output Formats' section to workflows/implementation.md covering: (1) Crawlee Dataset export to CSV/JSON/JSONL, (2) Streaming JSONL for 100k+ items, (3) Memory-efficient batch writing, (4) When to use a database vs files.",
+      "fix_locations": [
+        "workflows/implementation.md"
+      ]
+    },
+    {
+      "id": "W10",
+      "category": "Security & Ethics",
+      "title": "No PII/sensitive data handling guidance",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Comprehensive data privacy section: PII detection, GDPR, minimization, redaction",
+      "evidence_count": 8,
+      "evidence": [
+        "✓ [strategies\\anti-blocking.md:365] Pattern `PII` → \"- **PII Detection**: Always scan scraped data for Personally Identifiable Information (emails, phone\"",
+        "✓ [strategies\\anti-blocking.md:366] Pattern `GDPR` → \"- **Data Redaction**: Redact or hash PII before saving to comply with GDPR/CCPA, unless explicitly r\"",
+        "✓ [strategies\\anti-blocking.md:366] Pattern `CCPA` → \"- **Data Redaction**: Redact or hash PII before saving to comply with GDPR/CCPA, unless explicitly r\"",
+        "✓ [strategies\\anti-blocking.md:366] Pattern `redact` → \"- **Data Redaction**: Redact or hash PII before saving to comply with GDPR/CCPA, unless explicitly r\"",
+        "✓ [workflows\\reconnaissance.md:73] Pattern `consent` → \"- **Popups/banners**: Cookie consent, newsletters → Need to dismiss before exploration\""
+      ],
+      "recommendation": "Expand the 'Ethical Considerations' section in strategies/anti-blocking.md or create a new reference/data-privacy.md covering: (1) PII detection patterns (email, phone, SSN regex), (2) GDPR/CCPA implications of scraping personal data, (3) Data minimization (only collect what you need), (4) Redaction patterns for logs and debug output.",
+      "fix_locations": [
+        "strategies/anti-blocking.md"
+      ]
+    },
+    {
+      "id": "W11",
+      "category": "Security & Ethics",
+      "title": "Credential exposure risk in proxy examples",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Examples use env vars, explains .env files, warns against hardcoding",
+      "evidence_count": 14,
+      "evidence": [
+        "✓ [workflows\\implementation.md:185] Pattern `env(iron)?.*var` → \"1. **Credentials & Secrets**: Never hardcode your `password`, API keys, or proxy credentials in the \"",
+        "✓ [workflows\\implementation.md:118] Pattern `process\\.env` → \"proxy_set_upstream(process.env.PROXY_URL || \"http://127.0.0.1:8000\")\"",
+        "✓ [workflows\\implementation.md:29] Pattern `\\$\\{?[A-Z_]+\\}?` → \"console.log(`Testing with ${testUrls.length} URLs first...`);\"",
+        "✓ [workflows\\implementation.md:185] Pattern `secret` → \"1. **Credentials & Secrets**: Never hardcode your `password`, API keys, or proxy credentials in the \"",
+        "✓ [workflows\\implementation.md:118] Pattern `\\.env\\b` → \"proxy_set_upstream(process.env.PROXY_URL || \"http://127.0.0.1:8000\")\""
+      ],
+      "recommendation": "Replace all `user:pass@` patterns in examples with `${PROXY_URL}` or `process.env.PROXY_URL`. Add a note to strategies/anti-blocking.md: 'Never hardcode proxy credentials. Use environment variables or the Apify input schema for sensitive configuration.'",
+      "fix_locations": [
+        "strategies/anti-blocking.md",
+        "strategies/proxy-escalation.md",
+        "workflows/implementation.md"
+      ]
+    },
+    {
+      "id": "W12",
+      "category": "Operational Robustness",
+      "title": "No monitoring/alerting guidance for production scrapers",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Comprehensive ops section: scheduling, alerting, drift detection, cost tracking",
+      "evidence_count": 10,
+      "evidence": [
+        "✓ [apify\\deployment.md:169] Pattern `monitor` → \"### Monitor Run\"",
+        "✓ [apify\\deployment.md:429] Pattern `alert` → \"### 2. Alerting & Webhooks\"",
+        "✓ [apify\\deployment.md:422] Pattern `schedul` → \"### 1. Scheduling (Cron)\"",
+        "✓ [apify\\deployment.md:446] Pattern `drift` → \"### 3. Data Drift Detection\"",
+        "✓ [apify\\deployment.md:463] Pattern `cost` → \"### 4. Cost Tracking & Limits\""
+      ],
+      "recommendation": "Add an 'Operations' section to apify/deployment.md or a new apify/operations.md covering: (1) Apify scheduling (cron syntax), (2) Webhook notifications for failures, (3) Data quality assertions (expected row count, non-null fields), (4) Cost monitoring.",
+      "fix_locations": [
+        "apify/deployment.md"
+      ]
+    },
+    {
+      "id": "W13",
+      "category": "Structural Quality",
+      "title": "No timeout/budget enforcement for reconnaissance phases",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Explicit time/interaction budgets for Phases 1-4 with enforcement instructions",
+      "evidence_count": 16,
+      "evidence": [
+        "✓ [SKILL.md:40] Pattern `budget` → \"- **Budget Meta-Instruction**: If total reconnaissance exceeds 15 minutes, stop after this time limi\"",
+        "✓ [SKILL.md:40] Pattern `time.*limit` → \"- **Budget Meta-Instruction**: If total reconnaissance exceeds 15 minutes, stop after this time limi\"",
+        "✓ [SKILL.md:44] Pattern `max.*minutes` → \"**Budget**: Max 2 minutes time limit. **Tool-call cap**: 5 tool calls.\"",
+        "✓ [SKILL.md:40] Pattern `stop.*after` → \"- **Budget Meta-Instruction**: If total reconnaissance exceeds 15 minutes, stop after this time limi\"",
+        "✓ [SKILL.md:73] Pattern `ceiling` → \"**Budget**: At most 3 escalation levels (ceiling). **Tool-call cap**: 6 tool calls.\""
+      ],
+      "recommendation": "Add phase budgets to SKILL.md's phase descriptions: 'Phase 1: max 5 minutes', 'Phase 2: max 5 interactions per missing data point', 'Phase 4: max 3 escalation levels'. Add a meta-instruction: 'If total reconnaissance exceeds 15 minutes, stop and report with current findings.'",
+      "fix_locations": [
+        "SKILL.md",
+        "workflows/reconnaissance.md"
+      ]
+    },
+    {
+      "id": "W14",
+      "category": "Structural Quality",
+      "title": "Known Major Sites table is too small",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "16+ known sites with architecture, data strategy, and protection level",
+      "evidence_count": 11,
+      "evidence": [
+        "✓ [strategies\\framework-signatures.md:47] Pattern `ebay` → \"| `ebay.com`, `ebay.*` | Custom SSR | HTML selectors, `ld+json` | High protection (Akamai/Datadome).\"",
+        "✓ [strategies\\framework-signatures.md:48] Pattern `zillow` → \"| `zillow.com` | Next.js / React | `__NEXT_DATA__`, GraphQL API | Extreme protection (PerimeterX/Dat\"",
+        "✓ [strategies\\framework-signatures.md:49] Pattern `indeed` → \"| `indeed.com` | React / Java | Embedded state (`window._initialData`), GraphQL | Extreme protection\"",
+        "✓ [strategies\\framework-signatures.md:50] Pattern `airbnb` → \"| `airbnb.com` | React SSR | `ld+json`, GraphQL / `window.bootstrapData` | High protection. Dynamic \"",
+        "✓ [strategies\\framework-signatures.md:45] Pattern `facebook` → \"| `facebook.com` | React (Custom) | GraphQL APIs (highly obfuscated) | Extreme protection. Extensive\""
+      ],
+      "recommendation": "Expand the Known Major Sites table in strategies/framework-signatures.md with at least 10 more high-traffic domains: eBay, Zillow, Indeed, Airbnb, Walmart, Target, Best Buy, Etsy, Booking.com, Yelp. Include architecture type, recommended data strategy, and protection level for each.",
+      "fix_locations": [
+        "strategies/framework-signatures.md"
+      ]
+    },
+    {
+      "id": "W15",
+      "category": "Structural Quality",
+      "title": "No versioning or changelog",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Semantic versioning + detailed changelog with breaking changes noted",
+      "evidence_count": 6,
+      "evidence": [
+        "✓ [SKILL.md:5] Pattern `version:` → \"version: 1.2.0\"",
+        "✓ [CHANGELOG.md:1] Pattern `changelog` → \"# Changelog\"",
+        "✓ [CHANGELOG.md:1] Pattern `CHANGELOG` → \"# Changelog\"",
+        "✓ [CHANGELOG.md:24] Pattern `## v\\d` → \"## v1.2.0 - 2026-08-25\"",
+        "✓ [CHANGELOG.md:5] Pattern `last.*updated` → \"**Last updated**: 2026-08-25\""
+      ],
+      "recommendation": "Add `version: 1.0.0` to the SKILL.md YAML frontmatter. Create a CHANGELOG.md with the current state as v1.0.0 and guidance for updating it when Apify/Crawlee APIs change.",
+      "fix_locations": [
+        "SKILL.md",
+        "CHANGELOG.md"
+      ]
+    },
+    {
+      "id": "W16",
+      "category": "Structural Quality",
+      "title": "Duplicate content between SKILL.md and reconnaissance.md",
+      "score": 3,
+      "max_score": 3,
+      "rubric_match": "Zero duplication — SKILL.md is a pure routing table for phase details",
+      "evidence_count": 3,
+      "evidence": [
+        "✓ [SKILL.md:39] Pattern `See.*workflows/reconnaissance` → \"- **See**: `workflows/reconnaissance.md` for full step-by-step commands, tool usage, and tool error \"",
+        "✓ [SKILL.md:39] Pattern `see.*reconnaissance\\.md.*for.*detail` → \"- **See**: `workflows/reconnaissance.md` for full step-by-step commands, tool usage, and tool error \"",
+        "✓ [SKILL.md:39] Pattern `refer.*to.*reconnaissance` → \"- **See**: `workflows/reconnaissance.md` for full step-by-step commands, tool usage, and tool error \""
+      ],
+      "recommendation": "Reduce SKILL.md's Phase 0-5 descriptions to concise summaries (2-3 lines each) with 'See workflows/reconnaissance.md for full details' cross-references. Move all proxy-mcp tool call examples to the workflow file.",
+      "fix_locations": [
+        "SKILL.md"
+      ]
+    }
+  ],
+  "priority_fixes": []
+}

@@ -9,8 +9,10 @@ id_rsa
 *token*
 
 # 2. PII, Customer Data & Large Datasets
-*.csv
-*.json
+results_*.csv
+results_*.json
+company_emails_*.csv
+company_emails_*.json
 *.sql
 *.dmp
 *.sqlite3
