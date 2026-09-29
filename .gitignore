@@ -1,0 +1,53 @@
+# 1. Secrets & Credentials
+.env
+.env.*
+*.pem
+*.key
+*.p12
+id_rsa
+*secret*
+*token*
+
+# 2. PII, Customer Data & Large Datasets
+*.csv
+*.json
+*.sql
+*.dmp
+*.sqlite3
+*.parquet
+*.zip
+pipeline_output/
+
+# 3. Local Environments & Dependencies
+.venv/
+venv/
+env/
+node_modules/
+vendor/
+__pycache__/
+*.pyc
+
+# 4. Build Artifacts & Compiled Code
+*.exe
+*.dll
+*.so
+*.class
+dist/
+build/
+out/
+bin/
+obj/
+coverage/
+.coverage
+htmlcov/
+
+# 5. OS & IDE System Files
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# 6. Debugging & Logs
+*.log
+crash_dumps/
